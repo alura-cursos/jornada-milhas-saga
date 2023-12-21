@@ -3,18 +3,24 @@ import { comecarBusca, iniciarBuscaCarrinho, mudarStatusCarrinho, resetarCarrinh
 import { PayloadAction } from '@reduxjs/toolkit';
 import { BuscaCarrinho, StatusCarrinho, TodosOsStatus } from 'src/types/carrinho';
 import { baseUrl } from 'src/config/api';
+import { Task } from 'redux-saga';
 
 function* buscarTodos({ payload }: PayloadAction<BuscaCarrinho>) {
   const { buscarCarro, buscarHotel, buscarVoo } = payload;
 
   if (buscarHotel) {
-    console.log('buscando hotel');
+    const tarefaHotel: Task = yield fork(reservarHotel);
+    console.log('tarefaHotel: ', tarefaHotel);
   }
 
-  if (buscarVoo) yield fork(reservarVoo);
+  if (buscarVoo) {
+    const tarefaVoo: Task = yield fork(reservarVoo);
+    console.log('tarefaVoo: ', tarefaVoo);
+  }
 
   if (buscarCarro) {
-    console.log('buscando carro');
+    const tarefaCarro: Task = yield fork(reservarCarro);
+    console.log('tarefaCarro: ', tarefaCarro);
   }
 }
 
@@ -28,8 +34,16 @@ function* buscar(tipo: TodosOsStatus) {
   yield put(resetarCarrinho());
 }
 
+function* reservarHotel() {
+  yield call(buscar, TodosOsStatus.statusHotel);
+}
+
 function* reservarVoo() {
   yield call(buscar, TodosOsStatus.statusPassagens);
+}
+
+function* reservarCarro() {
+  yield call(buscar, TodosOsStatus.statusCarro);
 }
 
 function* carrinhoSaga() {
