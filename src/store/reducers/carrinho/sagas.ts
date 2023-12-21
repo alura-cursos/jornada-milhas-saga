@@ -1,5 +1,5 @@
-import { call, delay, fork, put, takeLatest } from "redux-saga/effects";
-import { comecarBusca, iniciarBuscaCarrinho, mudarStatusCarrinho, resetarCarrinho } from './index';
+import { all, call, delay, fork, put, takeLatest } from "redux-saga/effects";
+import { cancelarBusca, comecarBusca, iniciarBuscaCarrinho, mudarStatusCarrinho, resetarCarrinho } from './index';
 import { PayloadAction } from '@reduxjs/toolkit';
 import { BuscaCarrinho, StatusCarrinho, TodosOsStatus } from 'src/types/carrinho';
 import { baseUrl } from 'src/config/api';
@@ -24,7 +24,18 @@ function* buscarTodos({ payload }: PayloadAction<BuscaCarrinho>) {
     tarefas.push({ tipo: TodosOsStatus.statusCarro, tarefa: tarefaCarro });
   }
 
-  console.log('tarefas: ', tarefas);
+  yield takeLatest('sagas/cancelarBuscas', function* () {
+    const tarefasCancelar = tarefas.map(obj => {
+      if (obj.tarefa.isRunning()) {
+        obj.tarefa.cancel();
+        return put(cancelarBusca(obj.tipo));
+      }
+    });
+
+    yield all(tarefasCancelar);
+    yield delay(2000);
+    yield put(resetarCarrinho());
+  })
 }
 
 function* buscar(tipo: TodosOsStatus) {
@@ -34,7 +45,7 @@ function* buscar(tipo: TodosOsStatus) {
   const novoStatus = deuErro ? StatusCarrinho.erro : StatusCarrinho.sucesso;
   yield put(mudarStatusCarrinho({ [tipo]: novoStatus }));
 
-  if(deuErro) {
+  if (deuErro) {
     yield put({ type: 'sagas/cancelarBuscas' });
   }
 
