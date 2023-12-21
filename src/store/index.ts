@@ -7,10 +7,15 @@ import carrinho from './reducers/carrinho';
 import createDebugger from 'redux-flipper';
 import { viagensApi } from './reducers/viagem/middlewares';
 import { filtroListener } from './reducers/filtro/middlewares';
+import createSagaMiddleware from 'redux-saga';
+import carrinhoSaga from './reducers/carrinho/sagas';
+
+const sagaMiddleware = createSagaMiddleware();
 
 const middlewares: Middleware[] = [
   viagensApi.middleware,
-  filtroListener.middleware
+  filtroListener.middleware,
+  sagaMiddleware
 ];
 
 if (__DEV__) {
@@ -32,5 +37,7 @@ const store = configureStore({
     }).concat(...middlewares)
   ,
 });
+
+sagaMiddleware.run(carrinhoSaga);
 
 export default store;
