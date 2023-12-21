@@ -1,14 +1,12 @@
-import { take } from "redux-saga/effects";
+import { takeLatest } from "redux-saga/effects";
+import { iniciarBuscaCarrinho } from './index';
 
 function* escutando() {
-  console.log("estou escutando!");
+  console.log("estou escutando usando o type!");
 }
 
 function* carrinhoSaga() {
-  while (true) {
-    yield take("carrinho/iniciarBuscaCarrinho");
-    yield escutando();
-  }
+  yield takeLatest(iniciarBuscaCarrinho.type, escutando);
 }
 
 export default carrinhoSaga;
