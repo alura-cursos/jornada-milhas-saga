@@ -7,21 +7,24 @@ import { Task } from 'redux-saga';
 
 function* buscarTodos({ payload }: PayloadAction<BuscaCarrinho>) {
   const { buscarCarro, buscarHotel, buscarVoo } = payload;
+  const tarefas: { tipo: TodosOsStatus, tarefa: Task }[] = [];
 
   if (buscarHotel) {
     const tarefaHotel: Task = yield fork(reservarHotel);
-    console.log('tarefaHotel: ', tarefaHotel);
+    tarefas.push({ tipo: TodosOsStatus.statusHotel, tarefa: tarefaHotel });
   }
 
   if (buscarVoo) {
     const tarefaVoo: Task = yield fork(reservarVoo);
-    console.log('tarefaVoo: ', tarefaVoo);
+    tarefas.push({ tipo: TodosOsStatus.statusPassagens, tarefa: tarefaVoo });
   }
 
   if (buscarCarro) {
     const tarefaCarro: Task = yield fork(reservarCarro);
-    console.log('tarefaCarro: ', tarefaCarro);
+    tarefas.push({ tipo: TodosOsStatus.statusCarro, tarefa: tarefaCarro });
   }
+
+  console.log('tarefas: ', tarefas);
 }
 
 function* buscar(tipo: TodosOsStatus) {
@@ -30,6 +33,11 @@ function* buscar(tipo: TodosOsStatus) {
   const deuErro = resultado.status === 404;
   const novoStatus = deuErro ? StatusCarrinho.erro : StatusCarrinho.sucesso;
   yield put(mudarStatusCarrinho({ [tipo]: novoStatus }));
+
+  if(deuErro) {
+    yield put({ type: 'sagas/cancelarBuscas' });
+  }
+
   yield delay(5000);
   yield put(resetarCarrinho());
 }
