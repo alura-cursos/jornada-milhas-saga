@@ -1,4 +1,4 @@
-import { delay, put, takeLatest } from "redux-saga/effects";
+import { call, delay, fork, put, takeLatest } from "redux-saga/effects";
 import { comecarBusca, iniciarBuscaCarrinho, mudarStatusCarrinho, resetarCarrinho } from './index';
 import { PayloadAction } from '@reduxjs/toolkit';
 import { BuscaCarrinho, StatusCarrinho, TodosOsStatus } from 'src/types/carrinho';
@@ -11,21 +11,25 @@ function* buscarTodos({ payload }: PayloadAction<BuscaCarrinho>) {
     console.log('buscando hotel');
   }
 
-  if (buscarVoo) yield reservarVoo();
+  if (buscarVoo) yield fork(reservarVoo);
 
   if (buscarCarro) {
     console.log('buscando carro');
   }
 }
 
-function* reservarVoo() {
-  yield put(comecarBusca(TodosOsStatus.statusPassagens));
+function* buscar(tipo: TodosOsStatus) {
+  yield put(comecarBusca(tipo));
   const resultado: Response = yield fetch(`${baseUrl}reservar`);
   const deuErro = resultado.status === 404;
   const novoStatus = deuErro ? StatusCarrinho.erro : StatusCarrinho.sucesso;
-  yield put(mudarStatusCarrinho({ [TodosOsStatus.statusPassagens]: novoStatus }));
+  yield put(mudarStatusCarrinho({ [tipo]: novoStatus }));
   yield delay(5000);
   yield put(resetarCarrinho());
+}
+
+function* reservarVoo() {
+  yield call(buscar, TodosOsStatus.statusPassagens);
 }
 
 function* carrinhoSaga() {
