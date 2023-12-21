@@ -1,7 +1,7 @@
-import { takeLatest } from "redux-saga/effects";
-import { iniciarBuscaCarrinho } from './index';
+import { put, takeLatest } from "redux-saga/effects";
+import { comecarBusca, iniciarBuscaCarrinho } from './index';
 import { PayloadAction } from '@reduxjs/toolkit';
-import { BuscaCarrinho } from 'src/types/carrinho';
+import { BuscaCarrinho, TodosOsStatus } from 'src/types/carrinho';
 
 function* buscarTodos({ payload }: PayloadAction<BuscaCarrinho>) {
   const { buscarCarro, buscarHotel, buscarVoo } = payload;
@@ -10,13 +10,15 @@ function* buscarTodos({ payload }: PayloadAction<BuscaCarrinho>) {
     console.log('buscando hotel');
   }
 
-  if (buscarVoo) {
-    console.log('buscando passagens');
-  }
+  if (buscarVoo) yield reservarVoo();
 
   if (buscarCarro) {
     console.log('buscando carro');
   }
+}
+
+function* reservarVoo() {
+  yield put(comecarBusca(TodosOsStatus.statusPassagens));
 }
 
 function* carrinhoSaga() {
